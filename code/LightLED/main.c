@@ -4,10 +4,12 @@
 
 #define GREEN_LED 0
 #define RED_LED   0
-#define BLUE_LED  1
+#define BLUE_LED  0
 
 int main()
 {
+	//采用ODR寄存器点亮LED
+	
 	#if GREEN_LED
 	//控制PB0引脚
 	//打开GPIOB的时钟
@@ -41,6 +43,29 @@ int main()
 	
 	//控制GPIOB输出高低电平
 	*(unsigned int*)(0x40010C00+0x0C) &= ~(1<<1);
+	
+	#endif
+	
+	#if 0
+	//采用BSRR寄存器点亮LED
+	//打开GPIOB的时钟
+	RCC_APB2ENR |= (1<<3);
+	//配置GPIOB的输入输出模式
+	GPIOB->CRL &= ~(0xf<<(4*0));
+	GPIOB->CRL |= (0x1<<(4*0));
+	//配置BSRR寄存器控制端口输出高低电平
+	//GPIOB->BSRR |= (1<<16);  //打开LED灯
+	GPIOB->BSRR |= (1<<0);   //关闭LED灯
+	
+	#else
+	//采用BRR寄存器点亮LED
+	//打开GPIOB的时钟
+	RCC_APB2ENR |= (1<<3);
+	//配置GPIOB的输入输出模式
+	GPIOB->CRL &= ~(0xf<<(4*1));
+	GPIOB->CRL |= (0x1<<(4*1));
+	//配置BSRR寄存器控制端口输出低电平
+	GPIOB->BRR |= (1<<1);  //BRR清除寄存器只能设置端口输出0，不能设置端口输出1
 	
 	#endif
 
