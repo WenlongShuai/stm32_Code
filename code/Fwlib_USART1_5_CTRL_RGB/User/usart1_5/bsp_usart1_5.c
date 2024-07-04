@@ -1,5 +1,7 @@
 #include "bsp_usart1_5.h"
 
+uint8_t receiveData = 0;
+
 static void NVIC_USART_Config()
 {
 	NVIC_InitTypeDef NVIC_InitStruct;
@@ -8,8 +10,8 @@ static void NVIC_USART_Config()
 	
 	NVIC_InitStruct.NVIC_IRQChannel = USART_NVIC_IRQ;
 	NVIC_InitStruct.NVIC_IRQChannelCmd = ENABLE;
-	NVIC_InitStruct.NVIC_IRQChannelPreemptionPriority = 1;
-	NVIC_InitStruct.NVIC_IRQChannelSubPriority = 1;
+	NVIC_InitStruct.NVIC_IRQChannelPreemptionPriority = USART_NVIC_PREEPRIORITY;
+	NVIC_InitStruct.NVIC_IRQChannelSubPriority = USART_NVIC_SUBPRIORITY;
 	
 	NVIC_Init(&NVIC_InitStruct);
 }
@@ -48,9 +50,9 @@ static void Usart_Config()
 	
 	USART_Cmd(USARTx, ENABLE);
 	
-	/* 如果要使用中断接收串口数据，那么就要执行这两个函数，如果使用printf、scanf等C语言库函数时，则需要把这句屏蔽 */
-	//NVIC_USART_Config();
-	//USART_ITConfig(USARTx, USART_IT_RXNE, ENABLE);
+	NVIC_USART_Config();
+	
+	USART_ITConfig(USARTx, USART_IT_RXNE, ENABLE);
 	
 }
 
@@ -58,7 +60,6 @@ void USART_GPIO_Init()
 {
 	Usart_GPIO_Config();
 	Usart_Config();
-	
 }
 
 void Usart_SendByteData(USART_TypeDef* USART, uint8_t sendData)
@@ -98,47 +99,3 @@ void Usart_SendStrData(USART_TypeDef* USART, uint8_t *sendData)
 	}
 	while(USART_GetFlagStatus(USART, USART_FLAG_TC) != SET);
 }
-
-////printf函数中fputc重定向
-//int fputc(int ch, FILE *f)
-//{
-//	USART_SendData(USARTx, ch);
-//	while(USART_GetFlagStatus(USARTx, USART_FLAG_TXE) != SET);
-//	return ch;
-//}
-
-////scanf函数中fgetc重定向
-//int getc(FILE *f)
-//{
-//	while(USART_GetFlagStatus(USARTx, USART_FLAG_RXNE) == RESET);
-//	return (int)USART_ReceiveData(USARTx);
-//}
-
-
-/*重定向c库函数printf到串口，重定向后可使用printf函数*/
-int fputc(int ch, FILE *f)
-{
-		/* 发送一个字节数据到串口 */
-		USART_SendData(USART1, (uint8_t) ch);
-		//DEBUG_USARTx改成你想用的USART端口
-		/* 等待发送完毕 */
-		while (USART_GetFlagStatus(USART1, USART_FLAG_TXE) == RESET);		
-		//DEBUG_USARTx改成你想用的USART端口
-		return (ch);
-}
-
-
-///重定向c库函数scanf到串口，重写向后可使用scanf、getchar等函数
-int fgetc(FILE *f)
-{
-		/* 等待串口输入数据 */
-		while (!USART_GetFlagStatus(USART1, USART_FLAG_RXNE));
-		//DEBUG_USARTx改成你想用的USART端口
-		return (int)USART_ReceiveData(USART1);
-		//DEBUG_USARTx改成你想用的USART端口
-}
-
-
-
-
-

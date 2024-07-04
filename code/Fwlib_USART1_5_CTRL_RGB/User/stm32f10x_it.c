@@ -155,11 +155,10 @@ void SysTick_Handler(void)
 
 void USART_IRQHANDLER()
 {
-	uint8_t receiveData = 0;
 	if(USART_GetITStatus(USARTx, USART_IT_RXNE) == SET)
 	{
 		receiveData = USART_ReceiveData(USARTx);
-		USART_SendData(USARTx, receiveData);
+		//USART_SendData(USARTx, receiveData);
 	}
 }
 
