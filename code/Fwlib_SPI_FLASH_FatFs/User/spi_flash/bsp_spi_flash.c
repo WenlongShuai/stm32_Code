@@ -46,6 +46,8 @@ static void SPI_GPIO_Config()
 	GPIO_InitStruct.GPIO_Mode = GPIO_Mode_Out_PP;  //CS由软件设置，不使用硬件外设的CS
 	GPIO_InitStruct.GPIO_Pin = SPI_GPIO_CS_PIN;
 	GPIO_Init(SPI_GPIO_CS_PORT, &GPIO_InitStruct);
+	
+	SPI_FLASH_CS_HIGH();  //先CS线拉高，因为GPIO复位后默认为0
 }
 
 /**
@@ -82,7 +84,7 @@ void SPI_GPIO_Init()
 {
 	SPI_GPIO_Config();
 	SPI_Config();
-	SPI_FLASH_CS_HIGH();
+	
 }
 
 /**
@@ -251,6 +253,20 @@ void SPI_Flash_WriteREG(uint16_t REGData)
 	SPI_Flash_SendData(REGData & 0xFF);
 	SPI_FLASH_CS_HIGH();
 	SPI_Flash_WaitForBUSY();
+}
+
+/**
+  * @brief  主机通过SPI总线向外部flash发送指令，读取外部flash的状态寄存器的值
+	* @param  无
+  * @retval 返回状态寄存器的值
+  */
+uint8_t SPI_Flash_ReadStatusReg()
+{
+	uint8_t status = 0;
+	SPI_FLASH_CS_LOW();
+	status = SPI_Flash_SendData(FLASH_READSTATUSREG1);
+	SPI_FLASH_CS_HIGH();
+	return status;
 }
 
 /**

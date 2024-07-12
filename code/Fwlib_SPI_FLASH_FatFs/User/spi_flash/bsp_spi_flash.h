@@ -82,6 +82,7 @@ uint16_t SPI_Flash_ReceiveData();
 void SPI_Flash_WriteEnable();
 void SPI_Flash_WaitForBUSY();
 void SPI_Flash_WriteREG(uint16_t REGData);
+uint8_t SPI_Flash_ReadStatusReg();
 uint8_t SPI_Flash_ReadByteData(uint32_t readAddr);
 void SPI_Flash_SequenceReadData(uint32_t readAddr, uint8_t *readData, uint32_t readLen);
 void SPI_Flash_PageWrite(uint32_t pageAddr, uint8_t *pageData, uint16_t pageLen);

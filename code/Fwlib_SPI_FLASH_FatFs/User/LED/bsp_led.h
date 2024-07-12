@@ -19,15 +19,24 @@
 #define LED_G(a)  if(a) \
 										GPIO_ResetBits(LED_GPIO_PORT, LED_G_GPIO_PIN);\
 									else \
-										GPIO_SetBits(LED_GPIO_PORT, LED_G_GPIO_PIN);
+									{\
+										GPIO_SetBits(LED_GPIO_PORT, LED_R_GPIO_PIN);\
+										GPIO_SetBits(LED_GPIO_PORT, LED_B_GPIO_PIN);\
+									}
 #define LED_R(a)  if(a) \
 										GPIO_ResetBits(LED_GPIO_PORT, LED_R_GPIO_PIN);\
 									else \
-										GPIO_SetBits(LED_GPIO_PORT, LED_R_GPIO_PIN);
+									{\
+										GPIO_SetBits(LED_GPIO_PORT, LED_G_GPIO_PIN);\
+										GPIO_SetBits(LED_GPIO_PORT, LED_B_GPIO_PIN);\
+									}
 #define LED_B(a)  if(a) \
 										GPIO_ResetBits(LED_GPIO_PORT, LED_B_GPIO_PIN);\
 									else \
-										GPIO_SetBits(LED_GPIO_PORT, LED_B_GPIO_PIN);
+									{\
+										GPIO_SetBits(LED_GPIO_PORT, LED_R_GPIO_PIN);\
+										GPIO_SetBits(LED_GPIO_PORT, LED_G_GPIO_PIN);\
+									}
 									
 									
 #define LED_R_TOGGLE   {LED_GPIO_PORT->ODR ^= LED_R_GPIO_PIN;}

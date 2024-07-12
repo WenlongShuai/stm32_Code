@@ -614,7 +614,6 @@ static const BYTE DbcTbl[] = MKCVTBL(TBL_DC, FF_CODE_PAGE);
 /*-----------------------------------------------------------------------*/
 /* Load/Store multi-byte word in the FAT structure                       */
 /*-----------------------------------------------------------------------*/
-
 static WORD ld_word (const BYTE* ptr)	/*	 Load a 2-byte little-endian word */
 {
 	WORD rv;
@@ -1104,6 +1103,11 @@ static FRESULT move_window (	/* Returns FR_OK or FR_DISK_ERR */
 /*-----------------------------------------------------------------------*/
 /* Synchronize filesystem and data on the storage                        */
 /*-----------------------------------------------------------------------*/
+
+DWORD get_fattime (void)
+{
+	return 0;
+}
 
 static FRESULT sync_fs (	/* Returns FR_OK or FR_DISK_ERR */
 	FATFS* fs		/* Filesystem object */
