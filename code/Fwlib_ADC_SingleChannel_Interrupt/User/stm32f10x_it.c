@@ -24,6 +24,7 @@
 /* Includes ------------------------------------------------------------------*/
 #include "stm32f10x_it.h"
 #include "bsp_adc.h"
+#include "bsp_led.h"
 
 extern uint16_t adcConversionValue;
 /** @addtogroup STM32F10x_StdPeriph_Template
@@ -158,6 +159,7 @@ void ADCx_IRQHANDLER()
 {
 	if(ADC_GetITStatus(ADC_x, ADCx_IT_FLAG) == SET)
 	{
+		LED_G(ON);
 		adcConversionValue = ADC_GetConversionValue(ADC_x);
 		ADC_ClearITPendingBit(ADC_x, ADCx_IT_FLAG);
 	}
