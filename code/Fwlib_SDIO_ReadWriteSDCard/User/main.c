@@ -4,9 +4,8 @@
 #include "bsp_led.h"
 #include "bsp_usart.h"
 
-
-__IO uint32_t SDCardOperation = SD_OPERATION_ERASE;
-
+/* 通过STM32的SDIO外设对SD卡进行擦除和读写测试 */
+ 
 int main()
 {
 	/* 初始化LED灯 */

@@ -26,30 +26,7 @@
 
 #include "stm32f10x.h"
 
-//#ifdef __cplusplus
-// extern "C" {
-//#endif
-
-
-/** @addtogroup Utilities
-  * @{
-  */
-  
-/** @addtogroup STM32_EVAL
-  * @{
-  */ 
-
-/** @addtogroup Common
-  * @{
-  */
-  
-/** @addtogroup STM32_EVAL_SDIO_SD
-  * @{
-  */  
-
-/** @defgroup STM32_EVAL_SDIO_SD_Exported_Types
-  * @{
-  */ 
+//SDIO_SD Exported Types
 typedef enum
 {
 /** 
@@ -89,9 +66,8 @@ typedef enum
   SD_SDIO_FUNCTION_FAILED            = (32),
   SD_SDIO_UNKNOWN_FUNCTION           = (33),
 
-/** 
-  * @brief  Standard error defines   
-  */ 
+
+// Standard error defines    
   SD_INTERNAL_ERROR, 
   SD_NOT_CONFIGURED,
   SD_REQUEST_PENDING, 
@@ -102,10 +78,8 @@ typedef enum
   SD_ERROR,  
   SD_OK = 0 
 } SD_Error;
-
-/** 
-  * @brief  SDIO Transfer state  
-  */   
+ 
+// SDIO Transfer state     
 typedef enum
 {
   SD_TRANSFER_OK  = 0,
@@ -113,9 +87,7 @@ typedef enum
   SD_TRANSFER_ERROR
 } SDTransferState;
 
-/** 
-  * @brief  SD Card States 
-  */   
+// SD Card States   
 typedef enum
 {
   SD_CARD_READY                  = ((uint32_t)0x00000001),
@@ -130,9 +102,7 @@ typedef enum
 }SDCardState;
 
 
-/** 
-  * @brief  Card Specific Data: CSD Register   
-  */ 
+// Card Specific Data: CSD Register    
 typedef struct
 {
   __IO uint8_t  CSDStruct;            /*!< CSD structure */
@@ -174,9 +144,8 @@ typedef struct
   __IO uint8_t  Reserved4;            /*!< always 1*/
 } SD_CSD;
 
-/** 
-  * @brief  Card Identification Data: CID Register   
-  */
+
+// Card Identification Data: CID Register   
 typedef struct
 {
   __IO uint8_t  ManufacturerID;       /*!< ManufacturerID */
@@ -191,9 +160,8 @@ typedef struct
   __IO uint8_t  Reserved2;            /*!< always 1 */
 } SD_CID;
 
-/** 
-  * @brief SD Card Status 
-  */
+
+// SD Card Status 
 typedef struct
 {
   __IO uint8_t DAT_BUS_WIDTH;
@@ -209,9 +177,7 @@ typedef struct
 } SD_CardStatus;
 
 
-/** 
-  * @brief SD Card information 
-  */
+// SD Card information 
 typedef struct
 {
   SD_CSD SD_csd;
@@ -222,17 +188,8 @@ typedef struct
   uint8_t CardType;
 } SD_CardInfo;
 
-/**
-  * @}
-  */
-  
-/** @defgroup STM32_EVAL_SDIO_SD_Exported_Constants
-  * @{
-  */ 
-
-/** 
-  * @brief SDIO Commands  Index 
-  */
+// SDIO_SD Exported Constants  
+// SDIO Commands  Index 
 #define SD_CMD_GO_IDLE_STATE                       ((uint8_t)0)
 #define SD_CMD_SEND_OP_COND                        ((uint8_t)1)
 #define SD_CMD_ALL_SEND_CID                        ((uint8_t)2)
@@ -280,10 +237,8 @@ typedef struct
 #define SD_CMD_GEN_CMD                             ((uint8_t)56)
 #define SD_CMD_NO_CMD                              ((uint8_t)64)
 
-/** 
-  * @brief Following commands are SD Card Specific commands.
-  *        SDIO_APP_CMD should be sent before sending these commands. 
-  */
+
+// 以下命令为SD卡相关命令,应该在发送这些命令之前发送SDIO_APP_CMD(CMD55)
 #define SD_CMD_APP_SD_SET_BUSWIDTH                 ((uint8_t)6)  /*!< For SD Card only */
 #define SD_CMD_SD_APP_STAUS                        ((uint8_t)13) /*!< For SD Card only */
 #define SD_CMD_SD_APP_SEND_NUM_WRITE_BLOCKS        ((uint8_t)22) /*!< For SD Card only */
@@ -293,10 +248,7 @@ typedef struct
 #define SD_CMD_SDIO_RW_DIRECT                      ((uint8_t)52) /*!< For SD I/O Card only */
 #define SD_CMD_SDIO_RW_EXTENDED                    ((uint8_t)53) /*!< For SD I/O Card only */
 
-/** 
-  * @brief Following commands are SD Card Specific security commands.
-  *        SDIO_APP_CMD should be sent before sending these commands. 
-  */
+// 以下命令为SD卡相关的安全命令,应该在发送这些命令之前发送SDIO_APP_CMD(CMD55)
 #define SD_CMD_SD_APP_GET_MKB                      ((uint8_t)43) /*!< For SD Card only */
 #define SD_CMD_SD_APP_GET_MID                      ((uint8_t)44) /*!< For SD Card only */
 #define SD_CMD_SD_APP_SET_CER_RN1                  ((uint8_t)45) /*!< For SD Card only */
@@ -309,19 +261,11 @@ typedef struct
 #define SD_CMD_SD_APP_CHANGE_SECURE_AREA           ((uint8_t)49) /*!< For SD Card only */
 #define SD_CMD_SD_APP_SECURE_WRITE_MKB             ((uint8_t)48) /*!< For SD Card only */
   
-/* Uncomment the following line to select the SDIO Data transfer mode */  
+//取消下面一行的注释以选择SDIO数据传输模式 
 #define SD_DMA_MODE                                ((uint32_t)0x00000000)
-/*#define SD_POLLING_MODE                            ((uint32_t)0x00000002)*/
+//#define SD_POLLING_MODE                            ((uint32_t)0x00000002)
 
-/**
-  * @brief  SD detection on its memory slot
-  */
-#define SD_PRESENT                                 ((uint8_t)0x01)
-#define SD_NOT_PRESENT                             ((uint8_t)0x00)
-
-/** 
-  * @brief Supported SD Memory Cards 
-  */
+// 支持的SD存储卡
 #define SDIO_STD_CAPACITY_SD_CARD_V1_1             ((uint32_t)0x00000000)
 #define SDIO_STD_CAPACITY_SD_CARD_V2_0             ((uint32_t)0x00000001)
 #define SDIO_HIGH_CAPACITY_SD_CARD                 ((uint32_t)0x00000002)
@@ -331,16 +275,13 @@ typedef struct
 #define SDIO_SECURE_DIGITAL_IO_COMBO_CARD          ((uint32_t)0x00000006)
 #define SDIO_HIGH_CAPACITY_MMC_CARD                ((uint32_t)0x00000007)
 
-
-/** 
-  * @brief  SDIO Intialization Frequency (400KHz max)
-  */
+ 
+// 初始化频率(400KHz max)
 #define SDIO_INIT_CLK_DIV                ((uint8_t)0xB2)
-/** 
-  * @brief  SDIO Data Transfer Frequency (25MHz max) 
-  */
+// SDIO数据传输频率(25MHz max) 
 #define SDIO_TRANSFER_CLK_DIV            ((uint8_t)0x00)
 
+//SDIO 外设GPIO
 #define GPIO_SDIO_CLK_FUNC  			 RCC_APB2PeriphClockCmd
 #define GPIO_SDIO_CLK 						 (RCC_APB2Periph_GPIOC|RCC_APB2Periph_GPIOD)
 #define GPIO_SDIO_D0_PORT    GPIOC
@@ -356,25 +297,11 @@ typedef struct
 #define GPIO_SDIO_CMD_PORT   GPIOD
 #define GPIO_SDIO_CMD_PIN		 GPIO_Pin_2
 
+//SDIO外设FIFO的地址
 #define SDIO_FIFO_ADDRESS                ((uint32_t)0x40018080)
 
 
-
-/**
-  * @}
-  */ 
-  
-	
-/** @defgroup STM32_EVAL_SDIO_SD_Exported_Macros
-  * @{
-  */ 
-/**
-  * @}
-  */ 
-
-/** @defgroup STM32_EVAL_SDIO_SD_Exported_Functions
-  * @{
-  */ 
+// SDIO_SD Exported Functions 
 void SD_DeInit(void);
 void SD_Init(void);
 SD_Error SD_EnterCardIdentificationMode(void);
@@ -399,29 +326,6 @@ SD_Error SD_SendSDStatus(uint32_t *psdstatus);
 SD_Error SD_ProcessIRQSrc(void);
 SD_Error SD_WaitReadOperation(void);
 SD_Error SD_WaitWriteOperation(void);
-#ifdef __cplusplus
-}
-#endif
 
 #endif /* __BSP_SDIO_SD_H__ */
-/**
-  * @}
-  */
-
-/**
-  * @}
-  */
-
-/**
-  * @}
-  */
-
-/**
-  * @}
-  */ 
-
-/**
-  * @}
-  */ 
-
 /******************* (C) COPYRIGHT 2011 STMicroelectronics *****END OF FILE****/

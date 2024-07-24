@@ -553,7 +553,7 @@ SD_Error SD_PowerON(void)
   /*!< Configure the SDIO peripheral */
   /*!< SDIOCLK = HCLK, SDIO_CK = HCLK/(2 + SDIO_INIT_CLK_DIV) */
   /*!< on STM32F2xx devices, SDIOCLK is fixed to 72MHz */
-  /*!< SDIO_CK for initialization should not exceed 400 KHz */  
+  /*!< SDIO_CK for initialization should not exceed 400 KHz */ 
   SDIO_InitStructure.SDIO_ClockDiv = SDIO_INIT_CLK_DIV;  //178
   SDIO_InitStructure.SDIO_ClockEdge = SDIO_ClockEdge_Rising;
   SDIO_InitStructure.SDIO_ClockBypass = SDIO_ClockBypass_Disable;  //关闭旁路电容
@@ -570,7 +570,7 @@ SD_Error SD_PowerON(void)
 
   /*!< CMD0: GO_IDLE_STATE ---------------------------------------------------*/
   /*!< No CMD response required */
-	//复位所有的卡到idle状态
+	//CMD0：复位所有的卡到idle状态
   SDIO_CmdInitStructure.SDIO_Argument = 0x0;  //命令的参数，无参数
   SDIO_CmdInitStructure.SDIO_CmdIndex = SD_CMD_GO_IDLE_STATE;  //命令序号 CMD0
   SDIO_CmdInitStructure.SDIO_Response = SDIO_Response_No;  //响应类型(无响应)
@@ -587,12 +587,11 @@ SD_Error SD_PowerON(void)
   }
 
   /*!< CMD8: SEND_IF_COND ----------------------------------------------------*/
-  /*!< Send CMD8 to verify SD card interface operating condition */
-  /*!< Argument: - [31:12]: Reserved (shall be set to '0')
-               - [11:8]: Supply Voltage (VHS) 0x1 (Range: 2.7-3.6 V)
-               - [7:0]: Check Pattern (recommended 0xAA) */
-  /*!< CMD Response: R7 */
-	
+  /*!< 发送CMD8验证SD卡接口工作状态 */
+  /*!< 参数: - [31:12]: 保留 (应该设置为0)
+               - [11:8]: 工作电压 (VHS) 0x1 (范围: 2.7-3.6 V)
+               - [7:0]: 检查模式 (推荐 0xAA) */
+  /*!< 命令响应类型: R7 */
 	//发送SD卡接口条件，包含主机支持的电压信息，并询问卡是否支持
   SDIO_CmdInitStructure.SDIO_Argument = SD_CHECK_PATTERN; //有参数，参数为：[31:12]保留位，[11:8]VHS，[7:0]检查模式
   SDIO_CmdInitStructure.SDIO_CmdIndex = SDIO_SEND_IF_COND; //命令序号，CMD8
@@ -613,7 +612,7 @@ SD_Error SD_PowerON(void)
   else
   {
     /*!< CMD55 */
-		//指定下个命令为特定应用命令，不是标准命令
+		//CMD55：指定下个命令为特定应用命令，不是标准命令
     SDIO_CmdInitStructure.SDIO_Argument = 0x00; //命令参数(无参数)
     SDIO_CmdInitStructure.SDIO_CmdIndex = SD_CMD_APP_CMD;  //命令序号，CMD55
     SDIO_CmdInitStructure.SDIO_Response = SDIO_Response_Short;  //响应类型(短响应)
@@ -631,18 +630,14 @@ SD_Error SD_PowerON(void)
   SDIO_SendCommand(&SDIO_CmdInitStructure);
   errorstatus = CmdResp1Error(SD_CMD_APP_CMD);
 
-  /*!< If errorstatus is Command TimeOut, it is a MMC card */
-  /*!< If errorstatus is SD_OK it is a SD card: SD card 2.0 (voltage range mismatch)
-     or SD card 1.x */
+	//如果errorstatus为Command_TimeOut，说明是MMC卡
+	//如果errorstatus为SD_OK，说明是SD卡2.0或SD卡1.x
   if (errorstatus == SD_OK)
   {
-    /*!< SD CARD */
-    /*!< Send ACMD41 SD_APP_OP_COND with Argument 0x80100000 */
 		//ACMD41：主机要求卡发送它的支持信息(HCS)和OCR寄存器的内容
     while ((!validvoltage) && (count < SD_MAX_VOLT_TRIAL))
     {
-
-      /*!< SEND CMD55 APP_CMD with RCA as 0 */
+      //发送CMD55 APP_CMD, RCA为0
 			//指定下个命令为特定应用命令，不是标准命令
       SDIO_CmdInitStructure.SDIO_Argument = 0x00;
       SDIO_CmdInitStructure.SDIO_CmdIndex = SD_CMD_APP_CMD;
@@ -657,7 +652,7 @@ SD_Error SD_PowerON(void)
       {
         return(errorstatus);
       }
-      SDIO_CmdInitStructure.SDIO_Argument = SD_VOLTAGE_WINDOW_SD | SDType;  //命令参数，[32]保留位，[30]HCS(OCR[30]),[29:24]保留位,[23:0]VDD电压(OCR[23:0])
+      SDIO_CmdInitStructure.SDIO_Argument = SD_VOLTAGE_WINDOW_SD | SDType; //命令参数，[32]保留位，[30]HCS(OCR[30]),[29:24]保留位,[23:0]VDD电压(OCR[23:0])
       SDIO_CmdInitStructure.SDIO_CmdIndex = SD_CMD_SD_APP_OP_COND; 
       SDIO_CmdInitStructure.SDIO_Response = SDIO_Response_Short;
       SDIO_CmdInitStructure.SDIO_Wait = SDIO_Wait_No;
@@ -691,25 +686,24 @@ SD_Error SD_PowerON(void)
 }
 
 /**
-  * @brief  Turns the SDIO output signals off.
-  * @param  None
-  * @retval SD_Error: SD Card Error code.
+  * @brief  关闭SDIO输出信号
+  * @param  无
+  * @retval SD_Error: SD卡错误码
   */
 SD_Error SD_PowerOFF(void)
 {
   SD_Error errorstatus = SD_OK;
 
-  /*!< Set Power State to OFF */
+	//将电源状态设置为关闭
   SDIO_SetPowerState(SDIO_PowerState_OFF);
 
   return(errorstatus);
 }
 
 /**
-  * @brief  Intialises all cards or single card as the case may be Card(s) come 
-  *         into standby state.
-  * @param  None
-  * @retval SD_Error: SD Card Error code.
+  * @brief  所有卡或单张卡进入待机状态。
+  * @param  无
+  * @retval SD_Error: SD卡错误码
   */
 SD_Error SD_InitializeCards(void)
 {
@@ -749,8 +743,6 @@ SD_Error SD_InitializeCards(void)
   if ((SDIO_STD_CAPACITY_SD_CARD_V1_1 == CardType) ||  (SDIO_STD_CAPACITY_SD_CARD_V2_0 == CardType) ||  (SDIO_SECURE_DIGITAL_IO_COMBO_CARD == CardType)
       ||  (SDIO_HIGH_CAPACITY_SD_CARD == CardType))
   {
-    /*!< Send CMD3 SET_REL_ADDR with argument 0 */
-    /*!< SD Card publishes its RCA. */
 		//CMD3：通知所有卡发布新的RCA
     SDIO_CmdInitStructure.SDIO_Argument = 0x00;  //参数类型（无参数）
     SDIO_CmdInitStructure.SDIO_CmdIndex = SD_CMD_SET_REL_ADDR; //命令序号，CMD3
@@ -771,7 +763,7 @@ SD_Error SD_InitializeCards(void)
   {
     RCA = rca;
 
-    /*!< Send CMD9 SEND_CSD with argument as card's RCA */
+    //发送CMD9 SD_CMD_SEND_CSD，参数作为卡片的RCA
 		//CMD9:通过RCA选定卡，然后再通过CMD线返回CSD内容
     SDIO_CmdInitStructure.SDIO_Argument = (uint32_t)(rca << 16); //命令参数，[31:16]RCA,[15:0]填充位
     SDIO_CmdInitStructure.SDIO_CmdIndex = SD_CMD_SEND_CSD;  //命令序号，CMD9
@@ -793,16 +785,15 @@ SD_Error SD_InitializeCards(void)
     CSD_Tab[3] = SDIO_GetResponse(SDIO_RESP4);
   }
 
-  errorstatus = SD_OK; /*!< All cards get intialized */
+  errorstatus = SD_OK; //所有的卡都被初始化
 
   return(errorstatus);
 }
 
 /**
-  * @brief  Returns information about specific card.
-  * @param  cardinfo: pointer to a SD_CardInfo structure that contains all SD card 
-  *         information.
-  * @retval SD_Error: SD Card Error code.
+  * @brief  返回关于特定卡片的信息
+  * @param  cardinfo: 指向包含所有SD卡的SD_CardInfo结构的指针信息
+  * @retval SD_Error: SD卡错误码
   */
 SD_Error SD_GetCardInfo(SD_CardInfo *cardinfo)
 {
@@ -1007,14 +998,13 @@ SD_Error SD_GetCardInfo(SD_CardInfo *cardinfo)
 }
 
 /**
-  * @brief  Enables wide bus opeartion for the requeseted card if supported by 
-  *         card.
-  * @param  WideMode: Specifies the SD card wide bus mode. 
-  *   This parameter can be one of the following values:
+  * @brief  如果card支持，则对所请求的卡启用宽总线操作
+  * @param  WideMode: 指定SD卡宽总线模式
+  *   该参数可以是以下值之一:
   *     @arg SDIO_BusWide_8b: 8-bit data transfer (Only for MMC)
   *     @arg SDIO_BusWide_4b: 4-bit data transfer
   *     @arg SDIO_BusWide_1b: 1-bit data transfer
-  * @retval SD_Error: SD Card Error code.
+  * @retval SD_Error: SD卡错误码
   */
 SD_Error SD_GetCardStatus(SD_CardStatus *cardstatus)
 {
@@ -1092,10 +1082,9 @@ SD_Error SD_GetCardStatus(SD_CardStatus *cardstatus)
 }
 
 /**
-  * @brief  Enables wide bus opeartion for the requeseted card if supported by 
-  *         card.
-  * @param  WideMode: Specifies the SD card wide bus mode. 
-  *   This parameter can be one of the following values:
+  * @brief  如果card支持，则对所请求的卡启用宽总线操作
+  * @param  WideMode: 指定SD卡宽总线模式
+  *   该参数可以是以下值之一:
   *     @arg SDIO_BusWide_8b: 8-bit data transfer (Only for MMC)
   *     @arg SDIO_BusWide_4b: 4-bit data transfer
   *     @arg SDIO_BusWide_1b: 1-bit data transfer
@@ -1105,7 +1094,7 @@ SD_Error SD_EnableWideBusOperation(uint32_t WideMode)
 {
   SD_Error errorstatus = SD_OK;
 
-  /*!< MMC Card doesn't support this feature */
+  //MMC卡不支持此功能
   if (SDIO_MULTIMEDIA_CARD == CardType)
   {
     errorstatus = SD_UNSUPPORTED_FEATURE;
@@ -1124,7 +1113,7 @@ SD_Error SD_EnableWideBusOperation(uint32_t WideMode)
 
       if (SD_OK == errorstatus)
       {
-        /*!< Configure the SDIO peripheral */
+        //配置SDIO外设
 				//将SDIO的数据线宽度设置为4bit
         SDIO_InitStructure.SDIO_ClockDiv = SDIO_TRANSFER_CLK_DIV; 
         SDIO_InitStructure.SDIO_ClockEdge = SDIO_ClockEdge_Rising;
@@ -1141,7 +1130,7 @@ SD_Error SD_EnableWideBusOperation(uint32_t WideMode)
 
       if (SD_OK == errorstatus)
       {
-        /*!< Configure the SDIO peripheral */
+        //配置SDIO外设
         SDIO_InitStructure.SDIO_ClockDiv = SDIO_TRANSFER_CLK_DIV; 
         SDIO_InitStructure.SDIO_ClockEdge = SDIO_ClockEdge_Rising;
         SDIO_InitStructure.SDIO_ClockBypass = SDIO_ClockBypass_Disable;
@@ -1157,9 +1146,9 @@ SD_Error SD_EnableWideBusOperation(uint32_t WideMode)
 }
 
 /**
-  * @brief  Selects or Deselects the corresponding card.
-  * @param  addr: Address of the Card to be selected.
-  * @retval SD_Error: SD Card Error code.
+  * @brief  选择或取消选择相应的卡
+  * @param  addr: 要选择的卡的地址
+  * @retval SD_Error: SD卡错误码
   */
 SD_Error SD_SelectDeselect(uint32_t addr)
 {
@@ -1180,18 +1169,14 @@ SD_Error SD_SelectDeselect(uint32_t addr)
 }
 
 /**
-  * @brief  Allows to read one block from a specified address in a card. The Data
-  *         transfer can be managed by DMA mode or Polling mode. 
-  * @note   This operation should be followed by two functions to check if the 
-  *         DMA Controller and SD Card status.
-  *          - SD_ReadWaitOperation(): this function insure that the DMA
-  *            controller has finished all data transfer.
-  *          - SD_GetStatus(): to check that the SD Card has finished the 
-  *            data transfer and it is ready for data.            
-  * @param  readbuff: pointer to the buffer that will contain the received data
-  * @param  ReadAddr: Address from where data are to be read.  
-  * @param  BlockSize: the SD card Data block size. The Block size should be 512.
-  * @retval SD_Error: SD Card Error code.
+  * @brief  允许从卡片中指定的地址读取一个数据块。数据传输可采用DMA方式或轮询方式进行管理
+  * @note   此操作应遵循两个函数来检查DMA控制器和SD卡的状态
+  *          - SD_ReadWaitOperation(): 该功能确保DMA控制器已完成所有数据传输
+  *          - SD_GetStatus(): 检查SD卡是否已完成数据传输，是否已准备好数据            
+  * @param  readbuff: 指向包含接收到的数据的缓冲区的指针
+  * @param  ReadAddr: 要读取数据的地址
+  * @param  BlockSize: SD卡数据块大小。块大小应该是512
+  * @retval SD_Error: SD卡错误码
   */
 SD_Error SD_ReadBlock(uint8_t *readbuff, uint32_t ReadAddr, uint16_t BlockSize)
 {
@@ -1237,7 +1222,7 @@ SD_Error SD_ReadBlock(uint8_t *readbuff, uint32_t ReadAddr, uint16_t BlockSize)
     return(errorstatus);
   }
 
-#if defined (SD_POLLING_MODE)  
+#if defined (SD_POLLING_MODE)  //轮询模式（普通模式） 
   /*!< In case of single block transfer, no need of stop transfer at all.*/
   /*!< Polling mode */
   while (!(SDIO->STA &(SDIO_FLAG_RXOVERR | SDIO_FLAG_DCRCFAIL | SDIO_FLAG_DTIMEOUT | SDIO_FLAG_DBCKEND | SDIO_FLAG_STBITERR)))
@@ -1285,7 +1270,7 @@ SD_Error SD_ReadBlock(uint8_t *readbuff, uint32_t ReadAddr, uint16_t BlockSize)
   /*!< Clear all the static flags */
   SDIO_ClearFlag(SDIO_STATIC_FLAGS);
 
-#elif defined (SD_DMA_MODE)
+#elif defined (SD_DMA_MODE)  //DMA模式
     SDIO_ITConfig(SDIO_IT_DATAEND, ENABLE);
     SDIO_DMACmd(ENABLE);
     SD_LowLevel_DMA_RxConfig((uint32_t *)readbuff, BlockSize);
@@ -1295,19 +1280,15 @@ SD_Error SD_ReadBlock(uint8_t *readbuff, uint32_t ReadAddr, uint16_t BlockSize)
 }
 
 /**
-  * @brief  Allows to read blocks from a specified address  in a card.  The Data
-  *         transfer can be managed by DMA mode or Polling mode. 
-  * @note   This operation should be followed by two functions to check if the 
-  *         DMA Controller and SD Card status.
-  *          - SD_ReadWaitOperation(): this function insure that the DMA
-  *            controller has finished all data transfer.
-  *          - SD_GetStatus(): to check that the SD Card has finished the 
-  *            data transfer and it is ready for data.   
-  * @param  readbuff: pointer to the buffer that will contain the received data.
-  * @param  ReadAddr: Address from where data are to be read.
-  * @param  BlockSize: the SD card Data block size. The Block size should be 512.
-  * @param  NumberOfBlocks: number of blocks to be read.
-  * @retval SD_Error: SD Card Error code.
+  * @brief  允许从卡片中指定的地址读取块。数据传输可采用DMA方式或轮询方式进行管理
+  * @note   此操作应遵循两个函数来检查DMA控制器和SD卡的状态
+  *          - SD_ReadWaitOperation(): 该功能确保DMA控制器已完成所有数据传输
+  *          - SD_GetStatus(): 检查SD卡是否已完成数据传输，是否已准备好数据  
+  * @param  readbuff: 指向包含接收到的数据的缓冲区的指针
+  * @param  ReadAddr: 要读取数据的地址
+  * @param  BlockSize: SD卡数据块大小。块大小应该是512
+  * @param  NumberOfBlocks: 要读取的块数
+  * @retval SD_Error: SD卡错误码
   */
 SD_Error SD_ReadMultiBlocks(uint8_t *readbuff, uint32_t ReadAddr, uint16_t BlockSize, uint32_t NumberOfBlocks)
 {
@@ -1373,12 +1354,11 @@ SD_Error SD_ReadMultiBlocks(uint8_t *readbuff, uint32_t ReadAddr, uint16_t Block
 }
 
 /**
-  * @brief  This function waits until the SDIO DMA data transfer is finished. 
-  *         This function should be called after SDIO_ReadMultiBlocks() function
-  *         to insure that all data sent by the card are already transferred by 
-  *         the DMA controller.        
-  * @param  None.
-  * @retval SD_Error: SD Card Error code.
+  * @brief  该函数等待直到SDIO DMA数据传输完成。
+						该函数应该在SDIO_ReadMultiBlocks()函数之后调用，
+						以确保由卡发送的所有数据都已经通过DMA控制器传输。        
+  * @param  无
+  * @retval SD_Error: SD卡错误码
   */
 SD_Error SD_WaitReadOperation(void)
 {
@@ -1395,18 +1375,14 @@ SD_Error SD_WaitReadOperation(void)
 }
 
 /**
-  * @brief  Allows to write one block starting from a specified address in a card.
-  *         The Data transfer can be managed by DMA mode or Polling mode.
-  * @note   This operation should be followed by two functions to check if the 
-  *         DMA Controller and SD Card status.
-  *          - SD_ReadWaitOperation(): this function insure that the DMA
-  *            controller has finished all data transfer.
-  *          - SD_GetStatus(): to check that the SD Card has finished the 
-  *            data transfer and it is ready for data.      
-  * @param  writebuff: pointer to the buffer that contain the data to be transferred.
-  * @param  WriteAddr: Address from where data are to be read.   
-  * @param  BlockSize: the SD card Data block size. The Block size should be 512.
-  * @retval SD_Error: SD Card Error code.
+  * @brief  允许从卡片的指定地址开始写入一个块。数据传输可采用DMA方式或轮询方式进行管理
+  * @note   此操作应遵循两个函数来检查DMA控制器和SD卡的状态
+  *          - SD_ReadWaitOperation(): 该功能确保DMA控制器已完成所有数据传输
+  *          - SD_GetStatus(): 检查SD卡是否已完成数据传输，是否已准备好数据    
+  * @param  writebuff: 指向包含要传输的数据的缓冲区的指针
+  * @param  WriteAddr: 要读取数据的地址  
+  * @param  BlockSize: SD卡数据块大小。块大小应该是512
+  * @retval SD_Error: SD卡错误码
   */
 SD_Error SD_WriteBlock(uint8_t *writebuff, uint32_t WriteAddr, uint16_t BlockSize)
 {
@@ -1455,7 +1431,7 @@ SD_Error SD_WriteBlock(uint8_t *writebuff, uint32_t WriteAddr, uint16_t BlockSiz
   SDIO_DataConfig(&SDIO_DataInitStructure);
 
   /*!< In case of single data block transfer no need of stop command at all */
-#if defined (SD_POLLING_MODE) 
+#if defined (SD_POLLING_MODE)  //轮询模式
   while (!(SDIO->STA & (SDIO_FLAG_DBCKEND | SDIO_FLAG_TXUNDERR | SDIO_FLAG_DCRCFAIL | SDIO_FLAG_DTIMEOUT | SDIO_FLAG_STBITERR)))
   {
     if (SDIO_GetFlagStatus(SDIO_FLAG_TXFIFOHE) != RESET)
@@ -1503,7 +1479,7 @@ SD_Error SD_WriteBlock(uint8_t *writebuff, uint32_t WriteAddr, uint16_t BlockSiz
     errorstatus = SD_START_BIT_ERR;
     return(errorstatus);
   }
-#elif defined (SD_DMA_MODE)
+#elif defined (SD_DMA_MODE)  //DMA模式
   SDIO_ITConfig(SDIO_IT_DATAEND, ENABLE);
   SD_LowLevel_DMA_TxConfig((uint32_t *)writebuff, BlockSize);
   SDIO_DMACmd(ENABLE);
@@ -1513,19 +1489,15 @@ SD_Error SD_WriteBlock(uint8_t *writebuff, uint32_t WriteAddr, uint16_t BlockSiz
 }
 
 /**
-  * @brief  Allows to write blocks starting from a specified address in a card.
-  *         The Data transfer can be managed by DMA mode only. 
-  * @note   This operation should be followed by two functions to check if the 
-  *         DMA Controller and SD Card status.
-  *          - SD_ReadWaitOperation(): this function insure that the DMA
-  *            controller has finished all data transfer.
-  *          - SD_GetStatus(): to check that the SD Card has finished the 
-  *            data transfer and it is ready for data.     
-  * @param  WriteAddr: Address from where data are to be read.
-  * @param  writebuff: pointer to the buffer that contain the data to be transferred.
-  * @param  BlockSize: the SD card Data block size. The Block size should be 512.
-  * @param  NumberOfBlocks: number of blocks to be written.
-  * @retval SD_Error: SD Card Error code.
+  * @brief  允许从卡片的指定地址开始写块。数据传输只能由DMA模式管理 
+  * @note   此操作应遵循两个函数来检查DMA控制器和SD卡的状态
+  *          - SD_ReadWaitOperation(): 该功能确保DMA控制器已完成所有数据传输
+  *          - SD_GetStatus(): 检查SD卡是否已完成数据传输，是否已准备好数据    
+  * @param  WriteAddr: 要读取数据的地址
+  * @param  writebuff: 指向包含要传输的数据的缓冲区的指针
+  * @param  BlockSize: SD卡数据块大小。块大小应该是512
+  * @param  NumberOfBlocks: 要写入的块数
+  * @retval SD_Error: SD卡错误码
   */
 SD_Error SD_WriteMultiBlocks(uint8_t *writebuff, uint32_t WriteAddr, uint16_t BlockSize, uint32_t NumberOfBlocks)
 {
@@ -1607,12 +1579,11 @@ SD_Error SD_WriteMultiBlocks(uint8_t *writebuff, uint32_t WriteAddr, uint16_t Bl
 }
 
 /**
-  * @brief  This function waits until the SDIO DMA data transfer is finished. 
-  *         This function should be called after SDIO_WriteBlock() and
-  *         SDIO_WriteMultiBlocks() function to insure that all data sent by the 
-  *         card are already transferred by the DMA controller.        
-  * @param  None.
-  * @retval SD_Error: SD Card Error code.
+  * @brief  该函数等待直到SDIO DMA数据传输完成。
+						该函数应该在SDIO_WriteBlock()和SDIO_WriteMultiBlocks()函数之后调用，
+						以确保卡发送的所有数据都已经通过DMA控制器传输。       
+  * @param  无
+  * @retval SD_Error: SD卡错误码
   */
 SD_Error SD_WaitWriteOperation(void)
 {
@@ -1625,19 +1596,19 @@ SD_Error SD_WaitWriteOperation(void)
     return(TransferError);
   }
 
-  /*!< Clear all the static flags */
+  //清除所有静态标志
   SDIO_ClearFlag(SDIO_STATIC_FLAGS);
 
   return(errorstatus);
 }
 
 /**
-  * @brief  Gets the cuurent data transfer state.
-  * @param  None
-  * @retval SDTransferState: Data Transfer state.
-  *   This value can be: 
-  *        - SD_TRANSFER_OK: No data transfer is acting
-  *        - SD_TRANSFER_BUSY: Data transfer is acting
+  * @brief  获取当前数据传输状态
+  * @param  无
+  * @retval SDTransferState: 数据传送状态
+  *   这个值可以是: 
+  *        - SD_TRANSFER_OK: 没有数据传输正在进行
+  *        - SD_TRANSFER_BUSY: 数据传输正在进行
   */
 SDTransferState SD_GetTransferState(void)
 {
@@ -1652,9 +1623,9 @@ SDTransferState SD_GetTransferState(void)
 }
 
 /**
-  * @brief  Aborts an ongoing data transfer.
-  * @param  None
-  * @retval SD_Error: SD Card Error code.
+  * @brief  中止正在进行的数据传输
+  * @param  无
+  * @retval SD_Error: SD卡错误码
   */
 SD_Error SD_StopTransfer(void)
 {
@@ -1669,10 +1640,10 @@ SD_Error SD_StopTransfer(void)
 }
 
 /**
-  * @brief  Allows to erase memory area specified for the given card.
-  * @param  startaddr: the start address.
-  * @param  endaddr: the end address.
-  * @retval SD_Error: SD Card Error code.
+  * @brief  允许擦除为给定卡指定的内存区域
+  * @param  startaddr: 开始地址
+  * @param  endaddr: 结束地址
+  * @retval SD_Error: SD卡错误码
   */
 SD_Error SD_Erase(uint32_t startaddr, uint32_t endaddr)
 {
@@ -1680,11 +1651,8 @@ SD_Error SD_Erase(uint32_t startaddr, uint32_t endaddr)
   uint32_t delay = 0;
   __IO uint32_t maxdelay = 0;
   uint8_t cardstate = 0;
-	uint32_t timeout;
 
-  timeout = 10000; /*!< 10000 */
-
-  /*!< Check if the card coomnd class supports erase command */
+	//检查card命令类是否支持erase命令
   if (((CSD_Tab[1] >> 20) & SD_CCCC_ERASE) == 0)
   {
     errorstatus = SD_REQUEST_NOT_APPLICABLE;
@@ -1707,10 +1675,9 @@ SD_Error SD_Erase(uint32_t startaddr, uint32_t endaddr)
     endaddr /= 512;
   }
   
-  /*!< According to sd-card spec 1.0 ERASE_GROUP_START (CMD32) and erase_group_end(CMD33) */
+	//根据sd卡规范1.0 ERASE_GROUP_START (CMD32)和erase_group_end(CMD33)
   if ((SDIO_STD_CAPACITY_SD_CARD_V1_1 == CardType) || (SDIO_STD_CAPACITY_SD_CARD_V2_0 == CardType) || (SDIO_HIGH_CAPACITY_SD_CARD == CardType))
   {
-    /*!< Send CMD32 SD_ERASE_GRP_START with argument as addr  */
 		//CMD32：设置擦除的起始块地址
     SDIO_CmdInitStructure.SDIO_Argument = startaddr; //命令参数，[31:0]数据地址
     SDIO_CmdInitStructure.SDIO_CmdIndex = SD_CMD_SD_ERASE_GRP_START; //命令序号，CMD32
@@ -1725,7 +1692,6 @@ SD_Error SD_Erase(uint32_t startaddr, uint32_t endaddr)
       return(errorstatus);
     }
 
-    /*!< Send CMD33 SD_ERASE_GRP_END with argument as addr  */
 		//CMD33：设置擦除的结束块地址
     SDIO_CmdInitStructure.SDIO_Argument = endaddr;//命令参数，[31:0]数据地址
     SDIO_CmdInitStructure.SDIO_CmdIndex = SD_CMD_SD_ERASE_GRP_END;  //命令序号，CMD33
@@ -1761,23 +1727,21 @@ SD_Error SD_Erase(uint32_t startaddr, uint32_t endaddr)
   for (delay = 0; delay < maxdelay; delay++)
   {}
 		
-  /*!< Wait till the card is in programming state */
+  //等待卡片进入编程状态
   errorstatus = IsCardProgramming(&cardstate);
 	//等待SD卡退出 SD_CARD_PROGRAMMING 状态
-  while ((errorstatus == SD_OK) && ((SD_CARD_PROGRAMMING == cardstate) || (SD_CARD_RECEIVING == cardstate)) && timeout > 0)
+  while ((errorstatus == SD_OK) && ((SD_CARD_PROGRAMMING == cardstate) || (SD_CARD_RECEIVING == cardstate)))
   {
     errorstatus = IsCardProgramming(&cardstate);
-		timeout--;
   }
 
   return(errorstatus);
 }
 
 /**
-  * @brief  Returns the current card's status.
-  * @param  pcardstatus: pointer to the buffer that will contain the SD card 
-  *         status (Card Status register).
-  * @retval SD_Error: SD Card Error code.
+  * @brief  返回当前卡的状态
+  * @param  指向缓冲区的指针，其中将包含SD卡状态(卡状态寄存器)
+  * @retval SD_Error: SD卡错误码
   */
 SD_Error SD_SendStatus(uint32_t *pcardstatus)
 {
@@ -1798,23 +1762,23 @@ SD_Error SD_SendStatus(uint32_t *pcardstatus)
 }
 
 /**
-  * @brief  Returns the current SD card's status.
-  * @param  psdstatus: pointer to the buffer that will contain the SD card status 
-  *         (SD Status register).
-  * @retval SD_Error: SD Card Error code.
+  * @brief  返回当前SD卡的状态
+  * @param  psdstatus: 指向包含SD卡状态的缓冲区的指针(SD状态寄存器)
+  * @retval SD_Error: SD卡错误码
   */
 SD_Error SD_SendSDStatus(uint32_t *psdstatus)
 {
   SD_Error errorstatus = SD_OK;
   uint32_t count = 0;
 
+	//从响应寄存器RESP1获取响应值
   if (SDIO_GetResponse(SDIO_RESP1) & SD_CARD_LOCKED)
   {
     errorstatus = SD_LOCK_UNLOCK_FAILED;
     return(errorstatus);
   }
 
-  /*!< Set block size for card if it is not equal to current block size for card. */
+  //如果卡的块大小不等于卡的当前块大小，则设置卡的块大小
   SDIO_CmdInitStructure.SDIO_Argument = 64;
   SDIO_CmdInitStructure.SDIO_CmdIndex = SD_CMD_SET_BLOCKLEN;
   SDIO_CmdInitStructure.SDIO_Response = SDIO_Response_Short;
@@ -1851,7 +1815,7 @@ SD_Error SD_SendSDStatus(uint32_t *psdstatus)
   SDIO_DataInitStructure.SDIO_DPSM = SDIO_DPSM_Enable;
   SDIO_DataConfig(&SDIO_DataInitStructure);
 
-  /*!< Send ACMD13 SD_APP_STAUS  with argument as card's RCA.*/
+  //发送ACMD13 sd_app_status，参数作为卡的RCA
   SDIO_CmdInitStructure.SDIO_Argument = 0;
   SDIO_CmdInitStructure.SDIO_CmdIndex = SD_CMD_SD_APP_STAUS;
   SDIO_CmdInitStructure.SDIO_Response = SDIO_Response_Short;
@@ -1908,16 +1872,16 @@ SD_Error SD_SendSDStatus(uint32_t *psdstatus)
     psdstatus++;
   }
 
-  /*!< Clear all the static status flags*/
+  //清除所有静态状态标志
   SDIO_ClearFlag(SDIO_STATIC_FLAGS);
 
   return(errorstatus);
 }
 
 /**
-  * @brief  Allows to process all the interrupts that are high.
-  * @param  None
-  * @retval SD_Error: SD Card Error code.
+  * @brief  允许处理所有高中断
+  * @param  无
+  * @retval SD_Error: SD卡错误码
   */
 SD_Error SD_ProcessIRQSrc(void)
 {
@@ -1938,9 +1902,9 @@ SD_Error SD_ProcessIRQSrc(void)
 }
 
 /**
-  * @brief  Checks for error conditions for CMD0.
-  * @param  None
-  * @retval SD_Error: SD Card Error code.
+  * @brief  检查CMD0的错误条件
+  * @param  无
+  * @retval SD_Error: SD卡错误码
   */
 static SD_Error CmdError(void)
 {
@@ -1960,16 +1924,16 @@ static SD_Error CmdError(void)
     return(errorstatus);
   }
 
-  /*!< Clear all the static flags */
+  //清除所有静态状态标志
   SDIO_ClearFlag(SDIO_STATIC_FLAGS);
 
   return(errorstatus);
 }
 
 /**
-  * @brief  Checks for error conditions for R7 response.
-  * @param  None
-  * @retval SD_Error: SD Card Error code.
+  * @brief  检查R7响应的错误条件
+  * @param  无
+  * @retval SD_Error: SD卡错误码
   */
 static SD_Error CmdResp7Error(void)
 {
@@ -1987,7 +1951,7 @@ static SD_Error CmdResp7Error(void)
 
   if ((timeout == 0) || (status & SDIO_FLAG_CTIMEOUT))
   {
-    /*!< Card is not V2.0 complient or card does not support the set voltage range */
+    //卡不兼容V2.0或卡不支持设置的电压范围
     errorstatus = SD_CMD_RSP_TIMEOUT;
     SDIO_ClearFlag(SDIO_FLAG_CTIMEOUT);
     return(errorstatus);
@@ -1995,7 +1959,7 @@ static SD_Error CmdResp7Error(void)
 
   if (status & SDIO_FLAG_CMDREND)
   {
-    /*!< Card is SD V2.0 compliant */
+    //卡是SD 兼容V2.0
     errorstatus = SD_OK;
     SDIO_ClearFlag(SDIO_FLAG_CMDREND);
     return(errorstatus);
@@ -2004,9 +1968,9 @@ static SD_Error CmdResp7Error(void)
 }
 
 /**
-  * @brief  Checks for error conditions for R1 response.
-  * @param  cmd: The sent command index.
-  * @retval SD_Error: SD Card Error code.
+  * @brief 检查R1响应的错误条件
+  * @param  cmd: 发送命令索引
+  * @retval SD_Error: SD卡错误码
   */
 static SD_Error CmdResp1Error(uint8_t cmd)
 {
@@ -2020,9 +1984,9 @@ static SD_Error CmdResp1Error(uint8_t cmd)
 }
 
 /**
-  * @brief  Checks for error conditions for R3 (OCR) response.
-  * @param  None
-  * @retval SD_Error: SD Card Error code.
+  * @brief  检查R3 (OCR)响应的错误条件
+  * @param  无
+  * @retval SD_Error: SD卡错误码
   */
 static SD_Error CmdResp3Error(void)
 {
@@ -2048,9 +2012,9 @@ static SD_Error CmdResp3Error(void)
 }
 
 /**
-  * @brief  Checks for error conditions for R2 (CID or CSD) response.
-  * @param  None
-  * @retval SD_Error: SD Card Error code.
+  * @brief  检查R2 (CID或CSD)响应的错误条件
+  * @param  无
+  * @retval SD_Error: SD卡错误码
   */
 static SD_Error CmdResp2Error(void)
 {
@@ -2084,11 +2048,10 @@ static SD_Error CmdResp2Error(void)
 }
 
 /**
-  * @brief  Checks for error conditions for R6 (RCA) response.
-  * @param  cmd: The sent command index.
-  * @param  prca: pointer to the variable that will contain the SD card relative 
-  *         address RCA. 
-  * @retval SD_Error: SD Card Error code.
+  * @brief  检查R6 (RCA)响应的错误条件
+  * @param  cmd: 发送命令索引
+  * @param  prca: 指向变量的指针，该变量将包含SD卡相对地址RCA
+  * @retval SD_Error: SD卡错误码
   */
 static SD_Error CmdResp6Error(uint8_t cmd, uint16_t *prca)
 {
@@ -2116,7 +2079,7 @@ static SD_Error CmdResp6Error(uint8_t cmd, uint16_t *prca)
     return(errorstatus);
   }
 
-  /*!< Check response received is of desired command */
+  //检查收到的响应是否符合所需的命令
   if (SDIO_GetCommandResponse() != cmd)
   {
     errorstatus = SD_ILLEGAL_CMD;
@@ -2154,10 +2117,10 @@ static SD_Error CmdResp6Error(uint8_t cmd, uint16_t *prca)
 }
 
 /**
-  * @brief  Enables or disables the SDIO wide bus mode.
-  * @param  NewState: new state of the SDIO wide bus mode.
-  *   This parameter can be: ENABLE or DISABLE.
-  * @retval SD_Error: SD Card Error code.
+  * @brief  启用或禁用SDIO宽总线模式
+  * @param  NewState: SDIO宽总线模式的新状态
+  *   这个参数可以是: ENABLE or DISABLE.
+  * @retval SD_Error: SD卡错误码
   */
 static SD_Error SDEnWideBus(FunctionalState NewState)
 {
@@ -2179,10 +2142,10 @@ static SD_Error SDEnWideBus(FunctionalState NewState)
     return(errorstatus);
   }
 
-  /*!< If wide bus operation to be enabled */
-  if (NewState == ENABLE)
+  
+  if (NewState == ENABLE)  //如果要启用宽总线操作
   {
-    /*!< If requested card supports wide bus operation */
+    //如果请求卡支持宽总线操作
     if ((scr[1] & SD_WIDE_BUS_SUPPORT) != SD_ALLZERO)
     {
       /*!< Send CMD55 APP_CMD with argument as card's RCA.*/
@@ -2222,10 +2185,10 @@ static SD_Error SDEnWideBus(FunctionalState NewState)
       errorstatus = SD_REQUEST_NOT_APPLICABLE;
       return(errorstatus);
     }
-  }   /*!< If wide bus operation to be disabled */
-  else
+  }   
+  else  //如果宽总线操作被禁用
   {
-    /*!< If requested card supports 1 bit mode operation */
+    //如果请求的卡支持1位模式操作
     if ((scr[1] & SD_SINGLE_BUS_SUPPORT) != SD_ALLZERO)
     {
       /*!< Send CMD55 APP_CMD with argument as card's RCA.*/
@@ -2245,6 +2208,7 @@ static SD_Error SDEnWideBus(FunctionalState NewState)
       }
 
       /*!< Send ACMD6 APP_CMD with argument as 2 for wide bus mode */
+			//发送ACMD6 APP_CMD参数为2的宽总线模式
       SDIO_CmdInitStructure.SDIO_Argument = 0x00;
       SDIO_CmdInitStructure.SDIO_CmdIndex = SD_CMD_APP_SD_SET_BUSWIDTH;
       SDIO_CmdInitStructure.SDIO_Response = SDIO_Response_Short;
@@ -2270,9 +2234,9 @@ static SD_Error SDEnWideBus(FunctionalState NewState)
 }
 
 /**
-  * @brief  Checks if the SD card is in programming state.
-  * @param  pstatus: pointer to the variable that will contain the SD card state.
-  * @retval SD_Error: SD Card Error code.
+  * @brief  检查SD卡是否处于编程状态
+  * @param  pstatus: 指向包含SD卡状态的变量的指针
+  * @retval SD_Error: SD卡错误码
   */
 static SD_Error IsCardProgramming(uint8_t *pstatus)
 {
@@ -2308,7 +2272,7 @@ static SD_Error IsCardProgramming(uint8_t *pstatus)
 
   status = (uint32_t)SDIO_GetCommandResponse();
 
-  /*!< Check response received is of desired command */
+  //检查收到的响应是否符合所需的命令
   if (status != SD_CMD_SEND_STATUS)
   {
     errorstatus = SD_ILLEGAL_CMD;
@@ -2427,10 +2391,10 @@ static SD_Error IsCardProgramming(uint8_t *pstatus)
 }
 
 /**
-  * @brief  Find the SD card SCR register value.
-  * @param  rca: selected card address.
-  * @param  pscr: pointer to the buffer that will contain the SCR value.
-  * @retval SD_Error: SD Card Error code.
+  * @brief  找到SD卡SCR寄存器值
+  * @param  rca: 所选卡片地址
+  * @param  pscr: 指向包含SCR值的缓冲区的指针
+  * @retval SD_Error: SD卡错误码
   */
 static SD_Error FindSCR(uint16_t rca, uint32_t *pscr)
 {
@@ -2539,9 +2503,9 @@ static SD_Error FindSCR(uint16_t rca, uint32_t *pscr)
 }
 
 /**
-  * @brief  Converts the number of bytes in power of two and returns the power.
-  * @param  NumberOfBytes: number of bytes.
-  * @retval None
+  * @brief  转换以2为幂的字节数并返回该幂
+  * @param  NumberOfBytes: 字节数
+  * @retval 无
   */
 uint8_t convert_from_bytes_to_power_of_two(uint16_t NumberOfBytes)
 {
@@ -2554,25 +2518,5 @@ uint8_t convert_from_bytes_to_power_of_two(uint16_t NumberOfBytes)
   }
   return(count);
 }
-
-/**
-  * @}
-  */
-
-/**
-  * @}
-  */
-
-/**
-  * @}
-  */
-
-/**
-  * @}
-  */
-
-/**
-  * @}
-  */  
 
 /******************* (C) COPYRIGHT 2011 STMicroelectronics *****END OF FILE****/
