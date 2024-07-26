@@ -23,6 +23,7 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "stm32f10x_it.h"
+#include "bsp_led.h"
 
 /** @addtogroup STM32F10x_StdPeriph_Template
   * @{
@@ -151,6 +152,18 @@ void SysTick_Handler(void)
 /*void PPP_IRQHandler(void)
 {
 }*/
+
+void PVD_IRQHandler()
+{
+	//VDD/VDDA低于由选定的PVD阀值
+	//在实际应用中用来处理紧急事件
+	if(PWR_GetFlagStatus(PWR_FLAG_PVDO) == SET) 
+	{
+		LED_R(ON);
+		PWR_ClearFlag(PWR_FLAG_PVDO);
+	}
+	EXTI_ClearITPendingBit(EXTI_Line16);
+}
 
 /**
   * @}
